@@ -26,6 +26,7 @@ function App() {
       if ('serviceWorker' in navigator) {
         const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: 'firebase-cloud-messaging-push-scope' })
         setIsRegister(true)
+
         console.log('Service Worker registered with scope:', registration)
       }
     } catch (error) {
@@ -35,16 +36,33 @@ function App() {
 
   // const checkServiceWorkerRegister = async () => {
   //   const allRegistration = await navigator.serviceWorker.getRegistrations()
+  //   const isRegisterSW = allRegistration.some((registration) => registration.active.scriptURL === `${window.location.origin}/firebase-messaging-sw.js`)
 
-  //   const isRegisterSW = allRegistration.some((registration) => registration.scope === "http://127.0.0.1:5173/firebase-cloud-messaging-push-scope")
-
-  //   if (!isRegisterSW) {
-  //     await registerServiceWorker()
+  //   if (isRegisterSW) {
+  //     setIsRegister(true)
   //   }
+
+  //   console.log(isRegisterSW)
+  //   return isRegisterSW
   // }
 
+  const unregisterServiceWorker = async () => {
+    const allRegistrations = await navigator.serviceWorker.getRegistrations()
+    const registerIndex = allRegistrations.findIndex((registration) => registration.active.scriptURL === `${window.location.origin}/firebase-messaging-sw.js`)
+    const firebaseMessageSW = allRegistrations[registerIndex]
+  
+    const unregistration = await firebaseMessageSW.unregister()
+    console.log(unregistration)
+  }
+
   useEffect(() => {
-    // checkServiceWorkerRegister()
+    window.addEventListener('load', registerServiceWorker)
+    window.addEventListener('beforeunload', unregisterServiceWorker)
+
+    return () => {
+      window.removeEventListener('beforeunload', unregisterServiceWorker)
+      window.removeEventListener('load', registerServiceWorker)
+    }
   }, [])
 
   return (
